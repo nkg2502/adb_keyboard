@@ -182,6 +182,8 @@ def adb_display():
 	viewer.write(html_src)
 	viewer.close()
 
+	os.system('start adb_viewer.html')
+
 	while True:
 		take_screenshot()
 		time.sleep(0.1)
@@ -191,15 +193,12 @@ def take_screenshot():
 	os.system('adb shell screencap -p /data/temp{}.png'.format(0))
 	os.system('adb pull /data/temp{}.png .'.format(0))
 
-
 os.system('adb wait-for-device root')
 os.system('adb wait-for-device remount')
 os.system('adb wait-for-device devices')
-os.system('start adb_viewer.html')
 
 threading.Thread(target=adb_display).start()
-
-AdbKeyboardDialog(tk.Tk())
+threading.Thread(target=AdbKeyboardDialog, args=(tk.Tk(),)).start()
 
 
 '''
