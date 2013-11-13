@@ -1,4 +1,5 @@
 import os
+import time
 import sys
 import thread
 import threading
@@ -12,6 +13,7 @@ from Tkinter import *
 from datetime import datetime
 from time import strftime, localtime
 import tkFileDialog
+import threading
 
 keycode_table = [
 	'UNKNOWN',
@@ -41,8 +43,93 @@ keycode_table = [
 	'VOLUME_UP',
 	'VOLUME_DOWN',
 	'POWER',
-
+    'CAMERA',
+    'CLEAR',
+    'A',
+    'B',
+    'C',
+    'D',
+    'E',
+    'F',
+    'G',
+    'H',
+    'I',
+    'J',
+    'K',
+    'L',
+    'M',
+    'N',
+    'O',
+    'P',
+    'Q',
+    'R',
+    'S',
+    'T',
+    'U',
+    'V',
+    'W',
+    'X',
+    'Y',
+    'Z',
+    'COMMA',
+    'PERIOD',
+    'ALT_LEFT',
+    'ALT_RIGHT',
+	'SHIFT_LEFT',
+    'SHIFT_RIGHT',
+    'TAB',
+    'SPACE',
+    'SYM',
+    'EXPLORER',
+    'ENVELOPE',
+    'ENTER',
+    'DEL',
+    'GRAVE',
+    'MINUS',
+    'EQUALS',
+    'LEFT_BRACKET',
+    'RIGHT_BRACKET',
+    'BACKSLASH',
+    'SEMICOLON',
+    'APOSTROPHE',
+    'SLASH',
+    'AT',
+    'NUM',
+    'HEADSETHOOK',
+    'FOCUS',
+    'PLUS',
+    'MENU',
+    'NOTIFICATION',
+    'SEARCH',
 ]
+
+html_src = '''
+<!doctype html>
+<head>
+	<script>
+		i= 0;
+
+		window.onload = function() {
+			setInterval(function() {
+				window.location.reload(true);
+				document.getElementById('img_src').attribute('src') = 'temp' + '0' + '.png';
+				++i;
+			}, 1500);
+		}
+
+
+
+	</script>
+
+</head>
+
+<body>
+	<img id="img_src" src="temp0.png" width="30%" height="30%"/>
+
+</body>
+</html>
+'''
+
 
 
 # GUI path dialog
@@ -54,14 +141,18 @@ class AdbKeyboardDialog:
 		self.root = root
 
 		self.root_width = 500 
-		self.root_height = 500
+		self.root_height = 700
 		root.geometry('{}x{}'.format(self.root_width, self.root_height))
 
+
 		root.resizable(0, 0)
+		scrollbar = Scrollbar(root)
+		scrollbar.pack(side=RIGHT, fill=Y)
 
 		# key bind
 		root.bind('<Escape>', self.exit)
 		root.protocol('WM_DELETE_WINDOW', self.exit)
+		root.bind_all('<MouseWheel>', self._on_mousewheel)
 
 		# cancel button
 		for i, button_text in enumerate(keycode_table):
@@ -73,7 +164,7 @@ class AdbKeyboardDialog:
 					os.system('adb shell input keyevent {}'.format(keycode))
 				return execute
 
-			Button(root, text=button_text, font='Consolas 14', command=adb_keyevent(i, button_text)).grid(row=i/3, column=i%3)
+			Button(root, text=button_text, font='Consolas 10', command=adb_keyevent(i, button_text)).pack()
 
 
 		root.mainloop()
@@ -81,7 +172,39 @@ class AdbKeyboardDialog:
 
 	def exit(self, event=None):
 		sys.exit(0)
+	
+	def _on_mousewheel(self, event):
+		self.yview(-1*(event.delta/120), "units")
+
+def adb_display():
+
+	viewer = open('adb_viewer.html', 'w')
+	viewer.write(html_src)
+	viewer.close()
+
+	while True:
+		take_screenshot()
+		time.sleep(0.1)
 
 
+def take_screenshot():
+	os.system('adb shell screencap -p /data/temp{}.png'.format(0))
+	os.system('adb pull /data/temp{}.png .'.format(0))
+
+
+os.system('adb wait-for-device root')
+os.system('adb wait-for-device remount')
+os.system('adb wait-for-device devices')
+os.system('start adb_viewer.html')
+
+threading.Thread(target=adb_display).start()
 
 AdbKeyboardDialog(tk.Tk())
+
+
+'''
+adb shell /system/bin/screencap -p /sdcard/screenshot.png
+adb pull /sdcard/screenshot.png screenshot.png
+'''
+
+
